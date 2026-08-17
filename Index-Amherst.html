@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TACNET LE PART B - AMHERST COUNTY</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,sans-serif;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+body{background:#111827;color:white;padding:12px;min-height:100vh;}
+.top{background:black;border:2px solid #374151;border-radius:12px;padding:12px;text-align:center;margin-bottom:12px;}
+.top h1{font-size:19px;letter-spacing:2px;} .top p{font-size:10px;color:#9CA3AF;margin-top:4px;}
+.selects{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.selects select,.selects input{width:100%;padding:14px;border-radius:10px;border:2px solid #374151;background:#1F2937;color:white;font-size:15px;font-weight:bold;}
+.btn{width:100%;padding:22px 10px;border-radius:16px;border:none;font-weight:900;font-size:18px;margin-bottom:12px;cursor:pointer;position:relative;overflow:hidden;touch-action:none;}
+.btn:active{transform:scale(0.98);}
+.red{background:#7f1d1d;color:#fecaca;border:3px solid #DC2626;box-shadow:0 0 20px rgba(220,38,38,0.4);}
+.red .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:#DC2626;transition:width 0.05s linear;z-index:0;}
+.red .label{position:relative;z-index:1;}
+.red.holding{border-color:#fff;}
+.orange{background:#F97316;color:black;} .yellow{background:#FACC15;color:black;} .green{background:#16A34A;color:white;}
+.holdText{font-size:12px;margin-top:6px;opacity:0.9;}
+.routing{background:#1F2937;border-radius:12px;padding:12px;font-size:11px;line-height:1.5;margin-bottom:12px;border:1px solid #374151;}
+.alert{position:fixed;inset:0;background:rgba(0,0,0,0.96);display:none;align-items:center;justify-content:center;z-index:99;padding:20px;}
+.alert.show{display:flex;}
+.box{background:#1F2937;border-radius:20px;padding:24px;width:100%;max-width:360px;text-align:center;border:3px solid white;}
+.modal-input{width:100%;padding:16px;border-radius:12px;border:2px solid #F97316;background:black;color:white;font-size:16px;margin:12px 0;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;}
+.chip{background:#374151;padding:8px 12px;border-radius:20px;font-size:12px;font-weight:bold;cursor:pointer;border:1px solid #4B5563;}
+</style>
+</head>
+<body>
+
+<div class="top">
+<h1>TACNET LE PART B</h1>
+<p>AMHERST COUNTY VA - 3-SEC HOLD RED - RETIRED DEPUTY SHERIFF EARL WOOD</p>
+</div>
+
+<div class="selects">
+<select id="school">
+<option>Amherst County High School</option>
+<option>Amherst Middle School</option>
+<option>Amherst Elementary School</option>
+<option>Central Elementary School</option>
+<option>Elon Elementary School</option>
+<option>Monelison Middle School</option>
+<option>Temperance Elementary School</option>
+<option>Amherst Education Center</option>
+</select>
+<input id="room" value="115" placeholder="ROOM #">
+</div>
+
+<button class="btn red" id="redBtn">
+<div class="fill" id="redFill"></div>
+<div class="label">🔴 RED - HOLD 3 SEC<br><span style="font-size:11px;font-weight:700;">MAN WITH GUN - HOLD TO ARM</span><div class="holdText" id="holdText">HOLD 3 SECONDS TO ACTIVATE</div></div>
+</button>
+
+<button class="btn orange" onclick="openOrange()">🟠 ORANGE - IN-HOUSE ASSIST<br><span style="font-size:12px;font-weight:600;">FIGHT / EMS / UNRULY - TAP</span></button>
+<button class="btn yellow" onclick="sendYellow()">🟡 YELLOW<br><span style="font-size:11px;font-weight:600;">POSSIBLY NEED HELP WHEN DONE, WE ARE GOOD NOW</span></button>
+<button class="btn green" onclick="sendGreen()">🟢 GREEN - WE ARE OKAY / ALL CLEAR</button>
+
+<div class="routing">
+<b>AMHERST COUNTY ROUTING (UNIFORM):</b><br>
+🔴 RED = Hold 3 sec + Confirm YES = Sheriff Dispatch + All Teachers — No butt-dial<br>
+🟠 ORANGE = School + SRO Only — FIGHT, EMS, UNRULY — Tap only<br>
+🟡 YELLOW = Possibly need assistance when done, we are good now<br>
+🟢 GREEN = All clear / Cancel RED within 5 sec<br><br>
+<i>Seconds Save Lives — Amherst County — Demo Mode</i>
+</div>
+
+<div id="alert" class="alert"><div class="box" id="alertBox"></div></div>
+
+<div id="redConfirm" class="alert"><div class="box" style="border-color:#DC2626;">
+<h1 style="font-size:50px;">🔴</h1>
+<h2 style="color:#DC2626;margin-top:8px;">MAN WITH GUN?</h2>
+<p id="confirmDetails" style="font-size:14px;margin:12px 0;line-height:1.4;"></p>
+<p style="font-size:11px;color:#FCA5A5;">YOU HELD 3 SEC — CONFIRM TO SEND</p>
+<button class="btn red" style="margin-top:14px;padding:18px;background:#DC2626;color:white;" onclick="confirmRed()">YES - SEND CAVALRY NOW</button>
+<button class="btn" style="background:#374151;color:white;padding:14px;" onclick="cancelRed()">NO - CANCEL - FALSE ALARM</button>
+</div></div>
+
+<div id="orangeModal" class="alert"><div class="box" style="border-color:#F97316;">
+<h2 style="color:#F97316;">🟠 IN-HOUSE ASSIST</h2>
+<p style="font-size:13px;margin-top:8px;color:#9CA3AF;">Amherst County Schools + SRO only</p>
+<div class="chips">
+<div class="chip" onclick="setChip('FIGHT')">FIGHT</div>
+<div class="chip" onclick="setChip('EMS NEEDED')">EMS NEEDED</div>
+<div class="chip" onclick="setChip('CHILD UNCONSCIOUS')">CHILD UNCONSCIOUS</div>
+<div class="chip" onclick="setChip('UNRULY STUDENTS NEED ASSISTANCE')">UNRULY STUDENTS</div>
+</div>
+<input id="orangeText" class="modal-input" placeholder="Type: FIGHT in hallway...">
+<button class="btn orange" style="margin:0" onclick="sendOrange()">SEND ORANGE - IN-HOUSE</button>
+<button style="margin-top:10px;background:none;border:none;color:#9CA3AF;font-size:12px;" onclick="closeOrange()">Cancel</button>
+</div></div>
+
+<script>
+let holdTimer=null, holdStart=0, holding=false, redLocked=false, lockTimer=null;
+const redBtn=document.getElementById('redBtn'), redFill=document.getElementById('redFill'), holdText=document.getElementById('holdText');
+function vibe(p){if(navigator.vibrate) navigator.vibrate(p);}
+function startHold(e){
+ if(redLocked) return;
+ e.preventDefault();
+ holding=true;
+ holdStart=Date.now();
+ redBtn.classList.add('holding');
+ holdTimer=setInterval(()=>{
+   let elapsed=Date.now()-holdStart;
+   let pct=Math.min(elapsed/3000*100,100);
+   redFill.style.width=pct+'%';
+   let sec=(elapsed/1000).toFixed(1);
+   holdText.textContent=`HOLDING ${sec}s / 3.0s - KEEP HOLDING`;
+   if(pct>=10) vibe(20);
+   if(elapsed>=3000){
+     clearInterval(holdTimer);
+     holding=false;
+     redFill.style.width='0%';
+     holdText.textContent='HOLD 3 SECONDS TO ACTIVATE';
+     redBtn.classList.remove('holding');
+     openRedConfirm();
+   }
+ },30);
+}
+function endHold(e){
+ if(!holding) return;
+ e.preventDefault();
+ holding=false;
+ clearInterval(holdTimer);
+ redFill.style.width='0%';
+ holdText.textContent='HOLD 3 SECONDS TO ACTIVATE - RELEASED TOO SOON';
+ redBtn.classList.remove('holding');
+ setTimeout(()=>{holdText.textContent='HOLD 3 SECONDS TO ACTIVATE';},1200);
+}
+redBtn.addEventListener('touchstart',startHold,{passive:false});
+redBtn.addEventListener('touchend',endHold,{passive:false});
+redBtn.addEventListener('mousedown',startHold);
+redBtn.addEventListener('mouseup',endHold);
+redBtn.addEventListener('mouseleave',endHold);
+function getInfo(){return{school:document.getElementById('school').value,room:document.getElementById('room').value,time:new Date().toLocaleTimeString()};}
+function openRedConfirm(){
+ const i=getInfo();
+ document.getElementById('confirmDetails').innerHTML=`<b>${i.school}</b><br>Room ${i.room}<br>${i.time}<br><br>Amherst County — You HELD 3 SEC — Confirm MAN WITH GUN?`;
+ document.getElementById('redConfirm').classList.add('show');
+ vibe([200,100,200,100,300]);
+}
+function cancelRed(){document.getElementById('redConfirm').classList.remove('show');}
+function confirmRed(){
+ document.getElementById('redConfirm').classList.remove('show');
+ const i=getInfo();
+ redLocked=true;
+ let secs=60;
+ redBtn.innerHTML=`<div class="label">🔴 CAVALRY EN ROUTE<br><span style="font-size:12px;">LOCKED ${secs}s - PREVENTS DOUBLE TAP</span></div>`;
+ redBtn.style.opacity='0.6';
+ lockTimer=setInterval(()=>{
+   secs--;
+   redBtn.innerHTML=`<div class="label">🔴 CAVALRY EN ROUTE<br><span style="font-size:12px;">LOCKED ${secs}s - PREVENTS DOUBLE TAP</span></div>`;
+   if(secs<=0){clearInterval(lockTimer); redLocked=false; redBtn.innerHTML=`<div class="fill" id="redFill" style="width:0%"></div><div class="label">🔴 RED - HOLD 3 SEC<br><span style="font-size:11px;font-weight:700;">MAN WITH GUN - HOLD TO ARM</span><div class="holdText" id="holdText">HOLD 3 SECONDS TO ACTIVATE</div></div>`; redBtn.style.opacity='1';}
+ },1000);
+ const box=document.getElementById('alertBox');
+ box.innerHTML=`<h1 style="font-size:60px;">🔴</h1><h2 style="color:#DC2626;">RED SENT - CAVALRY ROLLING</h2><p style="margin-top:10px;font-size:14px;"><b>${i.school} Room ${i.room}</b><br>${i.time}<br><br>Amherst County Sheriff Dispatch + All Teachers<br>60 sec lock prevents double alarm<br><br><span style="font-size:11px;color:#9CA3AF;">Demo Mode — Will hit Part A Base44 when approved</span></p><button class="btn green" style="margin-top:12px;padding:12px;font-size:14px;" onclick="sendGreen()">🟢 TAP GREEN IF FALSE ALARM - CANCEL WITHIN 5 SEC</button>`;
+ document.getElementById('alert').classList.add('show');
+ setTimeout(()=>{document.getElementById('alert').classList.remove('show');},7000);
+ console.log('RED CONFIRMED 3 SEC HOLD AMHERST',i);
+}
+function show(html){document.getElementById('alertBox').innerHTML=html;document.getElementById('alert').classList.add('show');setTimeout(()=>{document.getElementById('alert').classList.remove('show');},4000);}
+function openOrange(){document.getElementById('orangeModal').classList.add('show');}
+function closeOrange(){document.getElementById('orangeModal').classList.remove('show');}
+function setChip(t){document.getElementById('orangeText').value=t;}
+function sendOrange(){const t=document.getElementById('orangeText').value||'NEED ASSISTANCE';const i=getInfo();closeOrange();show(`<h1 style="font-size:60px;">🟠</h1><h2 style="color:#F97316;">ORANGE - IN-HOUSE ONLY</h2><p style="margin-top:10px;font-size:14px;"><b>Sent to Principal + SRO Only - Amherst County</b><br>NOT to Sheriff Dispatch<br><br><b>${t}</b><br>${i.school} Room ${i.room}<br>${i.time}</p>`);document.getElementById('orangeText').value='';}
+function sendYellow(){const i=getInfo();show(`<h1 style="font-size:60px;">🟡</h1><h2 style="color:#FACC15;">YELLOW SENT</h2><p style="margin-top:10px;">Possibly need assistance when done<br>We are good now<br><br>${i.school} Room ${i.room}<br>${i.time}</p>`);}
+function sendGreen(){const i=getInfo();show(`<h1 style="font-size:60px;">🟢</h1><h2 style="color:#16A34A;">GREEN - ALL CLEAR</h2><p style="margin-top:10px;">We are okay<br>False alarm cancelled<br><br>${i.school} Room ${i.room}<br>${i.time}</p>`);}
+</script>
+</body>
+</html>
